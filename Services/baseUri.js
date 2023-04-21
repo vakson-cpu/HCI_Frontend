@@ -1,0 +1,1 @@
+export const baseUri="https://hci-backend.vercel.app/api";
