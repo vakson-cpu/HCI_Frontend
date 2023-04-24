@@ -21,4 +21,10 @@ export const nbaService = {
     .then((res) => res.data)
     .catch((err) => err);
   },
+  getMatchDetailsById:async(id)=>{
+
+  },
+  getPlayersByMatchId:async(id)=>{
+    
+  }
 };
