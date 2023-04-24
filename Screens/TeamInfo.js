@@ -1,21 +1,30 @@
-import { Text, View } from "react-native";
+import { Text, View, VirtualizedList, ActivityIndicator } from "react-native";
 import { useState, useEfect, useEffect } from "react";
 import { nbaService } from "../Services/nbaService";
 import { Avatar, Box, HStack, VStack, Skeleton, Center } from "native-base";
 import NativeSpinner from "../Shared/Components/NativeSpinner";
 import { FlatList } from "react-native-gesture-handler";
+
 import Match from "../Shared/Components/Match";
+import { List } from "react-virtualized";
 const TeamInfo = ({ route }) => {
   const [team, setTeam] = useState({});
   const [matches, setMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [color, setColor] = useState("");
   const [isLoading2, setIsLoading2] = useState(true);
-  // const { value } = route.params;
-  // console.log(value);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const getItem = (matches, index) => {
+    return matches[index];
+  };
+
+
+
   async function GetTeamInfo() {
     console.log("Poziva se ", route.params.value);
     try {
+    
       let result = await nbaService.getTeamById(route.params.value);
       console.log(result);
       setTeam(result.team[0]);
@@ -26,24 +35,48 @@ const TeamInfo = ({ route }) => {
       alert("Something went wrong!");
     }
   }
+  const handleEndReached = () => {
+    setIsLoadingMore(true);
+  };
+  const renderFooter = () => {
+    if (!isLoading2) {
+      return null;
+    }
+    if (isLoading2) {
+      return (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator size="large" color="gray" />
+        </View>
+      );
+    }
+  };
   async function GetTeamGames() {
     try {
+      setIsLoading2(true);
       let result = await nbaService.getTeamGames(2022, route.params.value);
       setMatches(result);
       setIsLoading2(false);
     } catch (err) {
       alert("Something went wrong!");
     }
-    console.log(result[0]);
   }
-  async function FetchData() {
-    await GetTeamInfo();
-    // await GetTeamGames();
-  }
+  // async function FetchData() {
+  //   await GetTeamInfo();
+  //   await GetTeamGames();
+  // }
+  const handleReturn = (item) => {
+    return <Match match={item} />;
+  };
+  const getItemCount = () => {
+    return matches.length;
+  };
   useEffect(() => {
     GetTeamInfo();
     GetTeamGames();
   }, []);
+
   if (isLoading == true) {
     return (
       <Box
@@ -155,14 +188,16 @@ const TeamInfo = ({ route }) => {
               width: "80%",
             }}
           ></Box>
-        {isLoading2 == false ? (
-          <FlatList
-            data={matches}
-            renderItem={(item) => <Match match={item} />}
-          />
-        ) : (
-          <NativeSpinner></NativeSpinner>
-        )}
+        
+                   <VirtualizedList
+              initialNumToRender={4}
+              data={matches}
+              renderItem={({ item }) => <Match match={item} />}
+              keyExtractor={(item) => item.id}
+              getItemCount={getItemCount}
+              getItem={(matches, index) => getItem(matches, index)}
+              ListFooterComponent={renderFooter}
+            />
         </Box>
       </Box>
     );
@@ -176,3 +211,10 @@ export default TeamInfo;
 
 //   } else <NativeSpinner></NativeSpinner>;
 // };
+
+/* <FlatList
+data={matches}
+initialNumToRender={4}
+refreshing={isLoading2}
+renderItem={(item) => <Match match={item} />}
+/> */
