@@ -22,9 +22,18 @@ export const nbaService = {
     .catch((err) => err);
   },
   getMatchDetailsById:async(id)=>{
-
+    return axios
+    .get(`${baseUri}/NBA/Game/Stats?gameId=${id}`)
+    .then((res) => res.data)
+    .catch((err) => err);
   },
   getPlayersByMatchId:async(id)=>{
-    
+    return axios
+    .get(`${baseUri}/NBA/Games/Player/Stats?gameId=${id}`)
+    .then((res) => res.data)
+    .catch((err) => err); 
   }
 };
+
+
+//Game/Stats?gameId=
