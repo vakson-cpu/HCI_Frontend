@@ -5,8 +5,8 @@ import { useState } from "react";
 import { authService } from "../../Services/authService";
 import { Pressable, Text } from "react-native";
 import { useDispatch } from "react-redux";
-import { signIn } from "../../Redux/Slices/authSlice";
-
+import { setVerify, signIn } from "../../Redux/Slices/authSlice";
+import NativeSpinner from "../Components/NativeSpinner"
 
 
 const RegistrationModal = ({ showModal, setShowModal }) => {
@@ -15,7 +15,7 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
   const [password, setPassword] = useState({ value: "", error: false });
   const [password2, setPassword2] = useState({ value: "", error: false });
   const [modalFlag, setModalFlag] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false)
   const dispatch = useDispatch();
   const validatePassword = () => {
     if (password.value !== password2.value) return false;
@@ -29,12 +29,14 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
     if (validatePassword() == false)
       return alert("Validation failed, make sure that passwords match!");
     try {
+      setIsLoading(true);
       let result = await authService.Register(
         name.value,
         email.value,
         password.value
       );
-      alert("Successfuly Registerd!");
+      setIsLoading(false);
+      alert("Successfuly Registerd! We have sent verification code!");
       setModalFlag(true);
     } catch (err) {
       alert("Something went wrong, please try again!");
@@ -42,10 +44,14 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
   };
   const handleSignIn =async()=>{
     try{
+      setIsLoading(true)
     let result = await authService.Login(email.value,password.value);
     dispatch(signIn(result.role.name))
+    dispatch(setVerify("result.verified"))
+    setIsLoading(false);
     setShowModal(false);
     }catch(err){
+      console.log(err)
       alert("Invalid Credentials!")
       return;
     }
@@ -55,6 +61,7 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
     return (
       <Center>
         <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+          { isLoading==false ?
           <Modal.Content backgroundColor={"#262626"} maxWidth="400px">
             <Modal.CloseButton />
             <Modal.Header
@@ -180,14 +187,16 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
                 </Button>
               </Button.Group>
             </Modal.Footer>
-          </Modal.Content>
+          </Modal.Content>:<NativeSpinner />}
         </Modal>
+                
       </Center>
     );
   else
     return (
       <Center>
         <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+          {isLoading===false ?
           <Modal.Content backgroundColor={"#262626"} maxWidth="400px">
             <Modal.CloseButton />
             <Modal.Header
@@ -275,7 +284,8 @@ const RegistrationModal = ({ showModal, setShowModal }) => {
                 </Button>
               </Button.Group>
             </Modal.Footer>
-          </Modal.Content>
+          </Modal.Content>:<NativeSpinner></NativeSpinner>
+}
         </Modal>
       </Center>
     );

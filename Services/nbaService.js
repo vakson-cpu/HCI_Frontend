@@ -9,11 +9,11 @@ export const nbaService = {
       .catch((err) => err);
   },
   getTeamById:async(id)=>{
-    let rezultat = await  axios
+    return axios
     .get(`${baseUri}/NBA/Teams/Name?id=${id}`)
     .then((res) => res.data)
     .catch((err) => err);
-    return rezultat;
+    
   },
   getTeamGames:async(season,teamId)=>{
     return axios
@@ -31,6 +31,25 @@ export const nbaService = {
     return axios
     .get(`${baseUri}/NBA/Games/Player/Stats?gameId=${id}`)
     .then((res) => res.data)
+    .catch((err) => err); 
+  },
+  getGamesToday:async()=>{
+    return axios
+    .get(`${baseUri}/NBA/Games`)
+    .then((res) => res.data)
+    .catch((err) => err); 
+  },
+  searchForTeam:async(text)=>{
+    return axios
+    .get(`${baseUri}/NBA/Teams/Search?searchText=${text}`)
+    .then((res) => res.data)
+    .catch((err) => err); 
+  },
+  searchForPlayer:async(text)=>{
+    return axios
+    .get(`${baseUri}/NBA/Players/Search?searchText=${text}`)
+    .then((res) => {console.log(res.data)
+      return res.data})
     .catch((err) => err); 
   }
 };

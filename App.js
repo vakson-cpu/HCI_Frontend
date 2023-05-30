@@ -1,27 +1,23 @@
 import "react-native-gesture-handler";
-import { View, Text, StatusBar } from "react-native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-import Leaderboard from "./Screens/Leaderboard";
 import { NavigationContainer } from "@react-navigation/native";
 import Home from "./Screens/Home";
 import CustomDrawerContent from "./Navigation/CustomDrawerContent";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeBaseProvider, Box } from "native-base";
+import { NativeBaseProvider } from "native-base";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect } from "react";
-import { Provider } from "react";
-import { store } from "./Redux/Store";
 import { useDispatch, useSelector } from "react-redux";
-import { signIn } from "./Redux/Slices/authSlice";
-import TeamInfo from "./Screens/TeamInfo";
-import { createStackNavigator } from "@react-navigation/stack";
+import { setName, setVerify, signIn } from "./Redux/Slices/authSlice";
 import StackNavigator from "./Navigation/StackNavigator";
+import StackNavigatorForSchedule from "./Navigation/StackNavigatorForSchedule";
+import Search from "./Screens/Search";
+import Favourites from "./Screens/Favourites"
 // import HomeStack from './Routes/HomeStack';r
 export default function App() {
   const dispatch = useDispatch();
   const isLogged = useSelector((state) => state.User.IsLoggedIn);
-  if (isLogged) console.log("logovan je");
+  
   useEffect(() => {
     AsyncStorage.getItem("role")
       .then((value) => {
@@ -29,13 +25,39 @@ export default function App() {
           dispatch(signIn("User"));
           console.log("Data exists:", value);
         } else {
-          console.log("No data");
+          console.log("No data for login");
         }
       })
+    AsyncStorage.getItem("name")
+      .then((value) => {
+        if (value !== null) {
+          dispatch(setName(value));
+          console.log("Data exists:", value);
+        } else {
+          console.log("No data for login");
+        }
+      })
+      AsyncStorage.getItem("verified")
+      .then((value) => {
+        if (value !== null) {
+          let verified;
+          console.log(value)
+          if(value==="false")
+          verified = "0";
+          else verified = "1";
+          console.log("verified je : ",verified)
+          dispatch(setVerify(verified))
+          console.log("Data exists:", verified);
+        } else {
+          console.log("No data for verified");
+        }
+      })
+      
       .catch((error) => {
         console.log("Error checking AsyncStorage:", error);
       });
-  }, []);
+    
+  }, [isLogged]);
 
   const Drawer = createDrawerNavigator();
 
@@ -77,7 +99,7 @@ export default function App() {
           />
           <Drawer.Screen
             name="Schedule"
-            component={Home}
+            component={StackNavigatorForSchedule}
             options={{
               drawerIcon: (color, size) => (
                 <MaterialIcons name="schedule" color={"grey"} size={20} />
@@ -85,11 +107,20 @@ export default function App() {
             }}
           />
           <Drawer.Screen
-            name="Statistics"
-            component={Home}
+            name="Search"
+            component={Search}
             options={{
               drawerIcon: (color, size) => (
                 <MaterialIcons name="bar-chart" color={"grey"} size={20} />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="Favorites"
+            component={Favourites}
+            options={{
+              drawerIcon: (color, size) => (
+                <MaterialIcons name="favorite" color={"grey"} size={20} />
               ),
             }}
           />

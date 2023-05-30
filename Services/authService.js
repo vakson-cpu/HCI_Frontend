@@ -35,8 +35,13 @@ export const authService = {
         AsyncStorage.setItem("token", JSON.stringify(res.data.data.token));
         AsyncStorage.setItem("Id", JSON.stringify(res.data.data.userId));
         AsyncStorage.setItem("role", JSON.stringify(res.data.data.role));
+        AsyncStorage.setItem("verified", JSON.stringify(res.data.data.verified));
+        AsyncStorage.setItem("name", JSON.stringify(res.data.data.name));
         return res.data.data
       })
       .catch((err) => console.log(err));
   },
+  VerifyUser:async(code,userId)=>{
+    return axios.put(`${baseUri}/Users/Verify?code=${code}&userId=${userId}`).then(res=>res.data).catch(err=>err);
+  }
 };

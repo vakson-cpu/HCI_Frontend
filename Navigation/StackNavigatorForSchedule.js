@@ -5,16 +5,15 @@ import Leaderboard from "../Screens/Leaderboard";
 import TeamInfo from "../Screens/TeamInfo";
 import MatchDeatails from "../Screens/MatchDeatails";
 import GamesToday from "../Screens/GamesToday";
-const StackNavigator = () => {
+const StackNavigatorForSchedule = () => {
   const Stack = createStackNavigator();
 
   return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="LeaderBoard" component={Leaderboard} />
-        <Stack.Screen name="TeamInfo" component={TeamInfo} />
+        <Stack.Screen name="schedule" component={GamesToday} />
         <Stack.Screen name="MatchDetails" component={MatchDeatails} />
       </Stack.Navigator>
   );
 };
 
-export default StackNavigator;
+export default StackNavigatorForSchedule;

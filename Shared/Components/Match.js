@@ -2,8 +2,7 @@ import { Avatar, Box, HStack, Text } from "native-base";
 import { TouchableOpacity } from "react-native";
 import { memo } from "react";
 import { useNavigation } from "@react-navigation/native";
-const Match = ({ match }) => {
-
+const Match = ({ match,onlyToday }) => {
   const navigation = useNavigation();
 
   const convertDate = (time) => {
@@ -12,7 +11,6 @@ const Match = ({ match }) => {
     let yy = date.slice(0, 4);
     let mm = date.slice(5, 7);
     let dd = date.slice(8);
-    console.log(yy + " " + mm + " " + dd);
     return dd + "/" + mm + "/" + yy;
   };
   const convertTime = (time) => {
@@ -25,9 +23,13 @@ const Match = ({ match }) => {
   };
   function handleMatchPressed(index) {
     console.log("\n",index);
+    if(onlyToday===true)
     navigation.navigate("MatchDetails", { value: index });
-  }
+    else
+    navigation.navigate("MatchDetails", { value: index });
 
+  }
+  if(onlyToday===true)
   return (
     <TouchableOpacity  onPress={()=>handleMatchPressed(match.id)}>
       <Box
@@ -104,6 +106,7 @@ const Match = ({ match }) => {
       </Box>
     </TouchableOpacity>
   );
+  
 };
 
 export default memo(Match);

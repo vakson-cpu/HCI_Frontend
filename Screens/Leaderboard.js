@@ -4,36 +4,37 @@ import { Box, Image, Avatar, Pressable } from "native-base";
 import { useEffect, useState } from "react";
 import { nbaService } from "../Services/nbaService";
 import NativeSpinner from "../Shared/Components/NativeSpinner";
-import { HStack } from "native-base";
+import { HStack,Select} from "native-base";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 const Leaderboard = () => {
   const [Leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [conference, setConference] = useState("east")
   const navigation = useNavigation();
 
   const fetchTeams = async () => {
-    try{
-    let result = await nbaService.getLeaderBoard("east");
-    console.log(result);
-    setLeaderboard(result.data.Leaderboard);
-    setLoading(false);}
-    catch(err){
-      console.log("An error occured,, \n",err);
+    try {
+      setLoading(true)
+      let result = await nbaService.getLeaderBoard(conference);
+      console.log(result);
+      setLeaderboard(result.data.Leaderboard);
+      setLoading(false);
+    } catch (err) {
+      console.log("An error occured,, \n", err);
     }
   };
 
   useEffect(() => {
     fetchTeams();
-  }, []);
+  }, [conference]);
 
   function splitSpace(value) {
     let newString = value.split(" ");
     return newString[0];
   }
   function handlePress(index) {
-    console.log("\n",index);
+    console.log("\n", index);
     navigation.navigate("TeamInfo", { value: index });
   }
 
@@ -47,6 +48,21 @@ const Leaderboard = () => {
     return (
       <SafeAreaView style={{ backgroundColor: "#222222" }}>
         <Box style={{ height: "100%" }} backgroundColor={"#222222"}>
+          <Select
+            selectedValue={conference}
+            placeholderTextColor={"white"}
+            style={{color:"lightgrey"}}
+            accessibilityLabel="Choose Conference"
+            placeholder="Choose Conference"
+            _selectedItem={{
+              bg: "lightgrey",
+            }}
+            mt={1}
+            onValueChange={(itemValue) => setConference(itemValue)}
+          >
+            <Select.Item color={"white"} label="East" value="east" />
+            <Select.Item label="West" value="west" />
+          </Select>{" "}
           <HStack
             style={{
               height: 40,

@@ -1,43 +1,72 @@
 import { Text, View, VirtualizedList, ActivityIndicator } from "react-native";
-import { useState, useEfect, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { nbaService } from "../Services/nbaService";
-import { Avatar, Box, HStack, VStack, Skeleton, Center } from "native-base";
-import NativeSpinner from "../Shared/Components/NativeSpinner";
-import { FlatList } from "react-native-gesture-handler";
-
+import { Avatar, Box, HStack, VStack, Skeleton } from "native-base";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { userService } from "../Services/userService";
 import Match from "../Shared/Components/Match";
-import { List } from "react-virtualized";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TouchableOpacity } from "react-native";
+import CustomAlert from "../Shared/Modals/CustomAlert";
+import NativeSpinner from "../Shared/Components/NativeSpinner";
 const TeamInfo = ({ route }) => {
   const [team, setTeam] = useState({});
   const [matches, setMatches] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [color, setColor] = useState("");
   const [isLoading2, setIsLoading2] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const fetchFavorites = async () => {
+    setFavoriteLoading(true);
+    try {
+      let userId = await AsyncStorage.getItem("Id")
+        .then((value) => value)
+        .catch((err) => err);
+      console.log(userId);
+      if (userId != null) {
+        let favorites = await userService.getFavorites(userId);
+        console.log("ovo je stiglo",favorites)
+        const realFavorites = favorites.data.favorites;
+        console.log("favs area", realFavorites);
+        let filterResults = realFavorites.filter(
+          (item) => item.id === team.id
+          );
+          if (filterResults != null) {
+          if (filterResults.length > 0) {
+            setIsFavorited(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+    setFavoriteLoading(false);
+  };
+  useEffect(() => {
+    if (team != null) fetchFavorites();
+  }, [team]);
 
   const getItem = (matches, index) => {
     return matches[index];
   };
 
-
-
   async function GetTeamInfo() {
-    console.log("Poziva se ", route.params.value);
     try {
-    
       let result = await nbaService.getTeamById(route.params.value);
-      console.log(result);
       setTeam(result.team[0]);
       setColor(result.color);
-      console.log(result.color);
       setIsLoading(false);
+      console.log("Team info : ", result.team[0]);
+      // await fetchFavorites(result.team[0])
     } catch (err) {
       alert("Something went wrong!");
+      console.log(err);
     }
   }
-  const handleEndReached = () => {
-    setIsLoadingMore(true);
-  };
+
   const renderFooter = () => {
     if (!isLoading2) {
       return null;
@@ -76,6 +105,23 @@ const TeamInfo = ({ route }) => {
     GetTeamInfo();
     GetTeamGames();
   }, []);
+
+  const pickFavorite = async (teamId) => {
+    if (isOpen === false) setIsOpen(true);
+    else {
+      let userId = await AsyncStorage.getItem("Id")
+        .then((value) => value)
+        .catch((err) => err);
+      console.log(userId);
+      try {
+        await userService.pickFavorites(userId, team.id);
+        setIsFavorited(true);
+        setIsOpen(false);
+      } catch (err) {
+        alert("Something went wrong!");
+      }
+    }
+  };
 
   if (isLoading == true) {
     return (
@@ -135,6 +181,17 @@ const TeamInfo = ({ route }) => {
               backgroundColor: `rgb(${color[0]}, ${color[1]},${color[2]})`,
             }}
           >
+            {favoriteLoading === false && (
+              <Box style={{ alignItems: "flex-end" }}>
+                <TouchableOpacity onPress={() => pickFavorite(team.id)}>
+                  <MaterialIcons
+                    name="favorite"
+                    color={isFavorited ? "red" : "grey"}
+                    size={20}
+                  />
+                </TouchableOpacity>
+              </Box>
+            )}
             <Avatar
               style={{
                 margin: "auto",
@@ -188,17 +245,27 @@ const TeamInfo = ({ route }) => {
               width: "80%",
             }}
           ></Box>
-        
-                   <VirtualizedList
+          {isLoading2 === false ? (
+            <VirtualizedList
               initialNumToRender={4}
               data={matches}
-              renderItem={({ item }) => <Match match={item} />}
+              renderItem={({ item }) => <Match match={item} onlyToday={true} />}
               keyExtractor={(item) => item.id}
               getItemCount={getItemCount}
               getItem={(matches, index) => getItem(matches, index)}
               ListFooterComponent={renderFooter}
             />
+          ) : (
+            <Box>
+              <NativeSpinner></NativeSpinner>
+            </Box>
+          )}
         </Box>
+        <CustomAlert
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          addToFavorite={pickFavorite}
+        />
       </Box>
     );
 };
