@@ -53,7 +53,9 @@ const Search = () => {
         value={inputText}
         variant="underlined"
         placeholder={isSwitched ? "Search for Teams" : "Search for Players"}
-      /></Box>
+      />
+      <Text style={{color:"white"}}>{isSwitched ? "Search for Teams" : "Search for Players"}</Text>
+      </Box>
       <Box style={{ alignItems: "center" }}>
         <Switch
           colorScheme={"emerald"}
