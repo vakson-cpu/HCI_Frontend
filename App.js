@@ -12,51 +12,48 @@ import { setName, setVerify, signIn } from "./Redux/Slices/authSlice";
 import StackNavigator from "./Navigation/StackNavigator";
 import StackNavigatorForSchedule from "./Navigation/StackNavigatorForSchedule";
 import Search from "./Screens/Search";
-import Favourites from "./Screens/Favourites"
+import FavoriteTeamNavigator from "./Navigation/FavoriteTeamNavigator";
+import StatisticsStack from "./Navigation/StatisticsStack";
 // import HomeStack from './Routes/HomeStack';r
 export default function App() {
   const dispatch = useDispatch();
   const isLogged = useSelector((state) => state.User.IsLoggedIn);
-  
+
   useEffect(() => {
-    AsyncStorage.getItem("role")
-      .then((value) => {
-        if (value !== null) {
-          dispatch(signIn("User"));
-          console.log("Data exists:", value);
-        } else {
-          console.log("No data for login");
-        }
-      })
-    AsyncStorage.getItem("name")
-      .then((value) => {
-        if (value !== null) {
-          dispatch(setName(value));
-          console.log("Data exists:", value);
-        } else {
-          console.log("No data for login");
-        }
-      })
-      AsyncStorage.getItem("verified")
+    AsyncStorage.getItem("role").then((value) => {
+      if (value !== null) {
+        dispatch(signIn("User"));
+        console.log("Data exists:", value);
+      } else {
+        console.log("No data for login");
+      }
+    });
+    AsyncStorage.getItem("name").then((value) => {
+      if (value !== null) {
+        dispatch(setName(value));
+        console.log("Data exists:", value);
+      } else {
+        console.log("No data for login");
+      }
+    });
+    AsyncStorage.getItem("verified")
       .then((value) => {
         if (value !== null) {
           let verified;
-          console.log(value)
-          if(value==="false")
-          verified = "0";
+          console.log(value);
+          if (value === "false") verified = "0";
           else verified = "1";
-          console.log("verified je : ",verified)
-          dispatch(setVerify(verified))
+          console.log("verified je : ", verified);
+          dispatch(setVerify(verified));
           console.log("Data exists:", verified);
         } else {
           console.log("No data for verified");
         }
       })
-      
+
       .catch((error) => {
         console.log("Error checking AsyncStorage:", error);
       });
-    
   }, [isLogged]);
 
   const Drawer = createDrawerNavigator();
@@ -65,6 +62,7 @@ export default function App() {
     <NativeBaseProvider>
       <NavigationContainer>
         <Drawer.Navigator
+          id="DrawerFirst"
           screenOptions={{
             drawerStyle: {
               backgroundColor: "black",
@@ -115,19 +113,29 @@ export default function App() {
               ),
             }}
           />
+          {isLogged && (
+            <Drawer.Screen
+              name="Favorites"
+              component={FavoriteTeamNavigator}
+              options={{
+                drawerIcon: (color, size) => (
+                  <MaterialIcons name="favorite" color={"grey"} size={20} />
+                ),
+                headerShown: true,
+              }}
+            />
+          )}
           <Drawer.Screen
-            name="Favorites"
-            component={Favourites}
+            name="Statistics"
+            component={StatisticsStack}
             options={{
               drawerIcon: (color, size) => (
-                <MaterialIcons name="favorite" color={"grey"} size={20} />
+                <MaterialIcons name="bar-chart" color={"grey"} size={20} />
               ),
             }}
           />
         </Drawer.Navigator>
-
       </NavigationContainer>
-  
     </NativeBaseProvider>
   );
 }
