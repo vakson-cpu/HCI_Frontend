@@ -1,5 +1,5 @@
 import { Text, View, VirtualizedList, ActivityIndicator } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { nbaService } from "../Services/nbaService";
 import { Avatar, Box, HStack, VStack, Skeleton } from "native-base";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -9,6 +9,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TouchableOpacity } from "react-native";
 import CustomAlert from "../Shared/Modals/CustomAlert";
 import NativeSpinner from "../Shared/Components/NativeSpinner";
+import { useNavigation } from "@react-navigation/native";
+import { FlatList } from "react-native";
+import { useIsFocused } from '@react-navigation/native';
+
 const TeamInfo = ({ route }) => {
   const [team, setTeam] = useState({});
   const [matches, setMatches] = useState([]);
@@ -18,49 +22,48 @@ const TeamInfo = ({ route }) => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();      
+  const teamId = useMemo(() => route.params.value, [route.params.value]);
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = async (theTeam) => {
+    console.log("Rutica je :",route.name);
+
     setFavoriteLoading(true);
+    setIsFavorited(false);
     try {
       let userId = await AsyncStorage.getItem("Id")
         .then((value) => value)
         .catch((err) => err);
-      console.log(userId);
-      if (userId != null) {
-        let favorites = await userService.getFavorites(userId);
-        console.log("ovo je stiglo",favorites)
+        console.log(userId);
+        var favorites = await userService.getFavorites(userId);
         const realFavorites = favorites.data.favorites;
-        console.log("favs area", realFavorites);
         let filterResults = realFavorites.filter(
-          (item) => item.id === team.id
-          );
-          if (filterResults != null) {
+          (item) => item.id === theTeam.id
+        );
           if (filterResults.length > 0) {
+            console.log(filterResults);
             setIsFavorited(true);
           }
-        }
-      }
+        setFavoriteLoading(false);
     } catch (err) {
+      alert("Something went wrong")
       console.log(err);
     }
-    setFavoriteLoading(false);
   };
-  useEffect(() => {
-    if (team != null) fetchFavorites();
-  }, [team]);
-
   const getItem = (matches, index) => {
     return matches[index];
   };
 
   async function GetTeamInfo() {
+    setIsLoading(true);
+    console.log("Ovo hoce", route.params.value);
     try {
       let result = await nbaService.getTeamById(route.params.value);
       setTeam(result.team[0]);
       setColor(result.color);
+      await fetchFavorites(result.team[0]);
       setIsLoading(false);
-      console.log("Team info : ", result.team[0]);
-      // await fetchFavorites(result.team[0])
     } catch (err) {
       alert("Something went wrong!");
       console.log(err);
@@ -76,7 +79,7 @@ const TeamInfo = ({ route }) => {
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
         >
-          <ActivityIndicator size="large" color="gray" />
+          <ActivityIndicator size="large" color="red" />
         </View>
       );
     }
@@ -95,6 +98,7 @@ const TeamInfo = ({ route }) => {
   //   await GetTeamInfo();
   //   await GetTeamGames();
   // }
+  
   const handleReturn = (item) => {
     return <Match match={item} />;
   };
@@ -104,7 +108,7 @@ const TeamInfo = ({ route }) => {
   useEffect(() => {
     GetTeamInfo();
     GetTeamGames();
-  }, []);
+  }, [teamId]);
 
   const pickFavorite = async (teamId) => {
     if (isOpen === false) setIsOpen(true);
@@ -181,7 +185,7 @@ const TeamInfo = ({ route }) => {
               backgroundColor: `rgb(${color[0]}, ${color[1]},${color[2]})`,
             }}
           >
-            {favoriteLoading === false && (
+            {favoriteLoading === false && isLoading == false && (
               <Box style={{ alignItems: "flex-end" }}>
                 <TouchableOpacity onPress={() => pickFavorite(team.id)}>
                   <MaterialIcons
@@ -192,6 +196,7 @@ const TeamInfo = ({ route }) => {
                 </TouchableOpacity>
               </Box>
             )}
+            { (isLoading != true && team!==null) &&
             <Avatar
               style={{
                 margin: "auto",
@@ -200,8 +205,9 @@ const TeamInfo = ({ route }) => {
                 width: 160,
                 height: 160,
               }}
-              source={{ uri: team.logo }}
+              source={{ uri: team.logo || ""}}
             />
+}
           </Box>
           <Box
             style={{
@@ -245,21 +251,18 @@ const TeamInfo = ({ route }) => {
               width: "80%",
             }}
           ></Box>
-          {isLoading2 === false ? (
-            <VirtualizedList
+          { isLoading2 ==false &&
+              <VirtualizedList
               initialNumToRender={4}
               data={matches}
-              renderItem={({ item }) => <Match match={item} onlyToday={true} />}
+              listKey="second-list"
+              renderItem={({ item,index }) => <Match key={index} match={item} onlyToday={true} />}
               keyExtractor={(item) => item.id}
               getItemCount={getItemCount}
               getItem={(matches, index) => getItem(matches, index)}
               ListFooterComponent={renderFooter}
-            />
-          ) : (
-            <Box>
-              <NativeSpinner></NativeSpinner>
-            </Box>
-          )}
+              />
+          }
         </Box>
         <CustomAlert
           isOpen={isOpen}
@@ -285,3 +288,13 @@ initialNumToRender={4}
 refreshing={isLoading2}
 renderItem={(item) => <Match match={item} />}
 /> */
+/* <VirtualizedList
+              initialNumToRender={4}
+              data={matches}
+              listKey="second-list"
+              renderItem={({ item,index }) => <Match key={index} match={item} onlyToday={true} />}
+              keyExtractor={(item) => item.id}
+              getItemCount={getItemCount}
+              getItem={(matches, index) => getItem(matches, index)}
+              ListFooterComponent={renderFooter}
+            /> */
