@@ -4,7 +4,6 @@ import { nbaService } from "../Services/nbaService";
 import TeamBox from "../Shared/Components/TeamBox";
 import NativeSpinner from "../Shared/Components/NativeSpinner";
 import PlayersSkelleton from "../Shared/Components/Skeletons/PlayersSkelleton"
-
 import { FlatList } from "react-native-gesture-handler";
 import { View } from "native-base";
 const MatchDeatails = ({ route }) => {
